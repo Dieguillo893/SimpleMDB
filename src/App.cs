@@ -18,11 +18,15 @@ public class App
 
         Console.WriteLine("Server listening on...." + host);
 
-        var authController = new AuthController();
+        var userRepository = new MockUserRepository();
+        var userService = new MockUserServices(userRepository);
+        var UserController = new UserController(userService);
+        var authController = new AuthController(userService);
 
         router = new HttpRouter();
 
         router.AddGet("/", authController.LandingPageGet);
+        router.AddGet("/users", UserController.ViewAllGet);
     }
 
     public async Task Start()
