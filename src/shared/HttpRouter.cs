@@ -69,11 +69,5 @@ public class HttpRouter
                 }
             }
         }
-
-        if (res.StatusCode == RESPONSE_NOT_SENT_YET)
-        {
-            res.StatusCode = (int)HttpStatusCode.NotFound;
-            res.Close();
-        }
     }
 }

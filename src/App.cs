@@ -42,8 +42,8 @@ public class App
 
         while (server.IsListening)
         {
-            var ctx = server.GetContext();
-            await HandleContextAsync(ctx);
+            var ctx = await server.GetContextAsync();
+            _ = HandleContextAsync(ctx);
         }
     }
 
@@ -59,6 +59,43 @@ public class App
         var res = ctx.Response;
         var options = new Hashtable();
 
-        await router.Handle(req, res, options);
+        DateTime startTime = DateTime.UtcNow;
+
+        try
+        {
+            res.StatusCode = HttpRouter.RESPONSE_NOT_SENT_YET;
+            await router.Handle(req, res, options);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine(ex);
+
+            if (res.StatusCode == HttpRouter.RESPONSE_NOT_SENT_YET)
+            {
+                if (Environment.GetEnvironmentVariable("DEVELOPMENT_MODE") != "Production")
+                {
+                    string html = HtmlTemplates.Base("SimpleMDB", "Error Page", ex.ToString());
+                    await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.InternalServerError, html);
+                }
+                else
+                {
+                    string html = HtmlTemplates.Base("SimpleMDB", "Error Page", "An error ocurred");
+                    await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.InternalServerError, html);
+                }
+            }
+        }
+        finally
+        {
+            if (res.StatusCode == HttpRouter.RESPONSE_NOT_SENT_YET)
+            {
+                string html = HtmlTemplates.Base("SimpleMDB", "Not Found Page", "Resource was not found.");
+                await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.NotFound, html);
+            }
+
+            string rid = req.Headers["X-Request-ID"] ?? "0";
+            TimeSpan elapsedTime = DateTime.UtcNow - startTime;
+
+            Console.WriteLine($"Request {rid}: {req.HttpMethod} {req.RawUrl} from {req.UserHostName} --> {res.StatusCode} ({res.ContentLength64} bytes) in {elapsedTime.TotalMilliseconds}ms");
+        }
     }
 }
