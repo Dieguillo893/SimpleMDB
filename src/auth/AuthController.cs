@@ -28,6 +28,7 @@ public class AuthController
         </ul>
         </nav>
         ";
+
         string content = HtmlTemplates.Base("SimpleMDB", "Landin Page", html);
         await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.OK, content);
     }

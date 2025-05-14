@@ -16,4 +16,9 @@ public class User
         Salt = salt;
         Role = role;
     }
+
+    public override string ToString()
+    {
+        return $"Id={Id}, Username={Username}, Password={Password}, Salt={Salt}, Role={Role}";
+    }
 }
