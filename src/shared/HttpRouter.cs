@@ -70,4 +70,9 @@ public class HttpRouter
             }
         }
     }
+
+    internal void AddGet(string v, object viewMovieGet)
+    {
+        throw new NotImplementedException();
+    }
 }

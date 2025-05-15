@@ -28,15 +28,15 @@ public class MockActorServices : ActorService
         }
         else if (newActor.FirstName.Length > 16)
         {
-            return new Result<Actor>(new Exception("Firstname cannoy have than 16 characters."));
+            return new Result<Actor>(new Exception("Firstname cannot have than 16 characters."));
         }
-        if (string.IsNullOrWhiteSpace(newActor.LastName))
+        else if (string.IsNullOrWhiteSpace(newActor.LastName))
         {
             return new Result<Actor>(new Exception("Lastname cannot be empty"));
         }
         else if (newActor.LastName.Length > 16)
         {
-            return new Result<Actor>(new Exception("Lastname cannoy have than 16 characters."));
+            return new Result<Actor>(new Exception("Lastname cannot have than 16 characters."));
         }
 
         Actor? actor = await actorRepository.Create(newActor);
