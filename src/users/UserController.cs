@@ -14,7 +14,7 @@ public class UserController
     }
 
     // GET /users?page=1&size=5
-    public async Task ViewAllGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
+    public async Task ViewAllUsersGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
         string message = req.QueryString["message"] ?? "";
 
@@ -28,95 +28,36 @@ public class UserController
             PagedResult<User> pagedResult = result.Value!;
             List<User> users = pagedResult.Values;
             int userCount = pagedResult.TotalCount;
-            int pageCount = (int)Math.Ceiling((double)userCount / size);
 
-            string rows = "";
+            string html = UserHtmlTemplates.ViewAllUsersGet(users, userCount, page, size);
+            string content = HtmlTemplates.Base("SimpleMDB", "Users View All Page", html, message);
 
-            foreach (var user in users)
-            {
-                rows += @$"
-                <tr>
-                  <td>{user.Id}</td>
-                  <td>{user.Username}</td> 
-                  <td>{user.Password}</td> 
-                  <td>{user.Salt}</td> 
-                  <td>{user.Role}</td> 
-                  <td><a href=""/users/view?uid={user.Id}"">View</a></td>
-                  <td><a href=""/users/edit?uid={user.Id}"">Edit</a></td>
-                  <td><a href=""/users/remove?uid={user.Id}"">Remove</a></td>
-                </tr>
-                ";
-            }
-
-            string html = $@"
-            <a href=""/users/add"">Add New User</a>
-            <table border=""1"">
-             <thead>
-              <th>Id</th>
-              <th>Username</th>
-              <th>Password</th>
-              <th>Salt</th>
-              <th>Role</th>
-              <th>View</th>
-              <th>Edit</th>
-              <th>Remove</th>
-             </thead>
-             <tbody>
-             {rows}
-             </tbody>
-            </table>
-            <div>
-              <a href=""?page=1&size={size}"">First</a>
-              <a href=""?page={page - 1}&size={size}"">Prev</a>
-              <span>{page} / {pageCount}</span>
-              <a href=""?page={page + 1}&size={size}"">Next</a>
-              <a href=""?page={pageCount}&size={size}"">Last</a>
-            </div>
-            <div>
-            {message}
-            </div>
-            ";
-
-            string content = HtmlTemplates.Base("SimpleMDB", "Users View All Page", html);
             await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.OK, content);
 
+        }
+        else
+        {
+            HttpUtils.AddOptions(options, "redirect", "message", result.Error!.Message);
+            await HttpUtils.Redirect(req, res, options, "/");
         }
     }
 
     // GET /users/add
-    public async Task AddGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
+    public async Task AddUserGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
+        string username = req.QueryString["username"] ?? "";
+        string role = req.QueryString["role"] ?? "";
         string message = req.QueryString["message"] ?? "";
-        string roles = "";
 
-        foreach (var role in Roles.ROLES)
-        {
-            roles += $@"<option value=""{role}"">{role}</option>";
-        }
+        string html = UserHtmlTemplates.AddUserGet(username, role);
+        string content = HtmlTemplates.Base("SimpleMDB", "Users Add Page", html, message);
 
-        string html = $@"
-            <form action=""/users/add"" method=""POST"">
-              <label for=""username"">Username</label>
-              <input id=""username"" name=""username"" type=""text"" placeholder=""Username"">
-              <label for=""password"">Password</label>
-              <input id=""password"" name=""password"" type=""password"" placeholder=""Password"">
-              <label for=""role"">Role</label>
-              <select id=""role"" name=""role"">
-              {roles}
-              </select>
-             <input type=""submit"" value=""Add"">
-            </form>
-            <div>
-            {message}
-            </div>
-            ";
-        string content = HtmlTemplates.Base("SimpleMDB", "Users Add Page", html);
         await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.OK, content);
 
     }
 
     // POST /users/add
-    public async Task AddPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
+    public async Task AddUserPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
         var formData = (NameValueCollection?)options["req.form"] ?? [];
 
@@ -130,18 +71,21 @@ public class UserController
 
         if (result.IsValid)
         {
-            options["message"] = "User added sucesfully!";
+            HttpUtils.AddOptions(options, "redirect", "message", "User added sucesfully!");
             await HttpUtils.Redirect(req, res, options, "/users");
         }
         else
         {
-            options["message"] = result.Error!.Message;
+            HttpUtils.AddOptions(options, "redirect", "message", result.Error!.Message);
+            HttpUtils.AddOptions(options, "redirect", "username", username);
+            HttpUtils.AddOptions(options, "redirect", "role", role);
+
             await HttpUtils.Redirect(req, res, options, "/users/add");
         }
     }
 
     // GET /users/view?uid=1
-    public async Task ViewGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
+    public async Task ViewUserGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
         string message = req.QueryString["message"] ?? "";
 
@@ -153,39 +97,17 @@ public class UserController
         {
             User user = result.Value!;
 
+            string html = UserHtmlTemplates.ViewUserGet(user);
+            string content = HtmlTemplates.Base("SimpleMDB", "Users View Page", html, message);
 
-            string html = $@"
-            <table border=""1"">
-             <thead>
-              <th>Id</th>
-              <th>Username</th>
-              <th>Password</th>
-              <th>Salt</th>
-              <th>Role</th>
-             </thead>
-             <tbody>
-             <tr>
-                  <td>{user.Id}</td>
-                  <td>{user.Username}</td> 
-                  <td>{user.Password}</td> 
-                  <td>{user.Salt}</td> 
-                  <td>{user.Role}</td> 
-                </tr>
-             </tbody>
-            </table>
-            <div>
-            {message}
-            </div>
-            ";
-
-            string content = HtmlTemplates.Base("SimpleMDB", "Users View Page", html);
             await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.OK, content);
 
         }
+
     }
 
     //GET /users/edit?uid=1
-    public async Task EditGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
+    public async Task EditUserGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
         string message = req.QueryString["message"] ?? "";
 
@@ -197,37 +119,20 @@ public class UserController
         {
             User user = result.Value!;
 
-            string roles = "";
+            string html = UserHtmlTemplates.EditUserGet(uid, user);
+            string content = HtmlTemplates.Base("SimpleMDB", "Users Edit Page", html, message);
 
-            foreach (var role in Roles.ROLES)
-            {
-                string selected = (role == user.Role) ? " selected" : "";
-                roles += $@"<option value=""{role}""{selected}>{role}</option>";
-            }
-
-            string html = $@"
-            <form action=""/users/edit?uid={uid}"" method=""POST"">
-              <label for=""username"">Username</label>
-              <input id=""username"" name=""username"" type=""text"" placeholder=""Username"" value=""{user.Username}"">
-              <label for=""password"">Password</label>
-              <input id=""password"" name=""password"" type=""password"" placeholder=""Password"" value=""{user.Password}"">
-              <label for=""role"">Role</label>
-              <select id=""role"" name=""role"">
-              {roles}
-              </select>
-             <input type=""submit"" value=""Edit"">
-            </form>
-            <div>
-            {message}
-            </div>
-            ";
-            string content = HtmlTemplates.Base("SimpleMDB", "Users Edit Page", html);
             await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.OK, content);
+        }
+        else
+        {
+            HttpUtils.AddOptions(options, "redirect", "message", result.Error!.Message);
+            await HttpUtils.Redirect(req, res, options, "/users");
         }
     }
 
     // POST /users/edit?uid=1
-    public async Task EditPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
+    public async Task EditUserPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
         int uid = int.TryParse(req.QueryString["uid"], out int u) ? u : 0;
 
@@ -243,18 +148,19 @@ public class UserController
 
         if (result.IsValid)
         {
-            options["message"] = "User edited sucesfully!";
+            HttpUtils.AddOptions(options, "redirect", "message", "User edited succesfully!");
             await HttpUtils.Redirect(req, res, options, "/users");
         }
         else
         {
-            options["message"] = result.Error!.Message;
+
+            HttpUtils.AddOptions(options, "redirect", "message", result.Error!.Message);
             await HttpUtils.Redirect(req, res, options, "/users/edit");
         }
     }
 
-    // GET /users/remove?uid=1
-    public async Task RemoveGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
+    // Post /users/remove?uid=1
+    public async Task RemoveUserPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
 
         int uid = int.TryParse(req.QueryString["uid"], out int u) ? u : 1;
@@ -263,12 +169,12 @@ public class UserController
 
         if (result.IsValid)
         {
-            options["message"] = "User removed sucesfully!";
+            HttpUtils.AddOptions(options, "redirect", "message", "User remove succesfully!");
             await HttpUtils.Redirect(req, res, options, "/users");
         }
         else
         {
-            options["message"] = result.Error!.Message;
+            HttpUtils.AddOptions(options, "redirect", "message", result.Error!.Message);
             await HttpUtils.Redirect(req, res, options, "/users");
         }
     }

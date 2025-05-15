@@ -4,7 +4,7 @@ public class Result<T>
 {
     public bool IsValid { get; }
     public T? Value { get; }
-    public Exception Error { get; }
+    public Exception? Error { get; }
 
     public Result(T value)
     {
@@ -18,3 +18,4 @@ public class Result<T>
         Error = error;
     }
 }
+

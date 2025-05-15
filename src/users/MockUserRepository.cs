@@ -6,7 +6,6 @@ public class MockUserRepository : UserRepository
 {
     private List<User> users;
     private int idCount;
-    private bool newUser;
 
     public MockUserRepository()
     {
