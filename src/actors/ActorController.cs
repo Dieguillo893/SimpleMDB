@@ -166,7 +166,6 @@ public class ActorController
     // Post /actors/remove?aid=1
     public async Task RemoveActorPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
-
         int aid = int.TryParse(req.QueryString["aid"], out int u) ? u : 1;
 
         Result<Actor> result = await actorService.Delete(aid);

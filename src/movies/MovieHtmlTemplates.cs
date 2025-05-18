@@ -2,8 +2,6 @@ namespace SimpleMDB;
 
 public class MovieHtmlTemplates
 {
-  private static object year;
-
   public static string ViewAllMoviesGet(List<Movie> movies, int movieCount, int page, int size)
   {
     int pageCount = (int)Math.Ceiling((double)movieCount / size);
@@ -22,13 +20,16 @@ public class MovieHtmlTemplates
                   <td><a href=""/movies/view?mid={movie.Id}"">View</a></td>
                   <td><a href=""/movies/edit?mid={movie.Id}"">Edit</a></td>
                   <td>
-                    <form action=""/movies/remove?mid={movie.Id}"" method=""POST"" onsubmit=""return confirm('Are you sure that you want to delete this movie?.')"">
+                    <form action=""/movies/remove?mid={movie.Id}"" method=""POST"" onsubmit=""return confirm('Are you sure that you want to delete this movie?')"">
                       <input type=""submit"" value=""Remove"">
                     </form>
                   </td>
                 </tr>
                 ";
     }
+
+    string pDisable = (page > 1).ToString().ToLower();
+    string nDisable = (page < pageCount).ToString().ToLower();
 
     string html = $@"
             <div class=""add"">
@@ -50,17 +51,17 @@ public class MovieHtmlTemplates
              </tbody>
             </table>
             <div class=""pagination"">
-              <a href=""?page=1&size={size}"">First</a>
-              <a href=""?page={page - 1}&size={size}"">Prev</a>
+              <a href=""?page=1&size={size}"" onclick=""return {pDisable};"">First</a>
+              <a href=""?page={page - 1}&size={size}"" onclick=""return {pDisable};"">Prev</a>
               <span>{page} / {pageCount}</span>
-              <a href=""?page={page + 1}&size={size}"">Next</a>
-              <a href=""?page={pageCount}&size={size}"">Last</a>
+              <a href=""?page={page + 1}&size={size}"" onclick=""return {nDisable};"">Next</a>
+              <a href=""?page={pageCount}&size={size}"" onclick=""return {nDisable};"">Last</a>
             </div>
             ";
     return html;
   }
 
-  public static string AddMovieGet(string title, string lasname, string description, string rating)
+  public static string AddMovieGet(string title, string year, string description, string rating)
   {
     string html = $@"
             <form class=""addform"" action=""/movies/add"" method=""POST"">
@@ -108,7 +109,6 @@ public class MovieHtmlTemplates
 
   public static string EditMovieGet(int mid, Movie movie)
   {
-
     string html = $@"
             <form class=""editform"" action=""/movies/edit?mid={mid}"" method=""POST"">
               <label for=""title"">Title</label>
