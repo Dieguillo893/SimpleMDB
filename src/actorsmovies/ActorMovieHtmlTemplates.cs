@@ -17,9 +17,7 @@ public class ActorMovieHtmlTemplates
             <td>{movie.Year}</td>
             <td>{movie.Description}</td>
             <td>{movie.Rating}</td>
-            <td><a href=""/view/movie?id={movie.Id}"">View</a></td>
-            <td><a href=""/edit/movie?id={movie.Id}"">Edit</a></td>
-            <td><a href=""/movies/actors?mid={movie.Id}"">Actors</a></td>
+            <td>{am.RoleName}</td>
             <td>
                 <form action=""/remove/movie?id={movie.Id}"" method=""POST"">
                     <input type=""submit"" value=""Remove"">
@@ -59,6 +57,7 @@ public class ActorMovieHtmlTemplates
 
     return html;
   }
+
 
 
   public static string ViewAllActorsByMovie(Movie movie, List<(ActorMovie am, Actor actor)> amas, int totalCount, int page, int size)

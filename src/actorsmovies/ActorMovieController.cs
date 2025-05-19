@@ -32,7 +32,7 @@ public class ActorMovieController
         string message = req.QueryString["message"] ?? "";
 
         int aid = int.TryParse(req.QueryString["aid"], out int a) ? a : -1;
-        int page = int.TryParse(req.QueryString["page"], out int p) ? p : -1;
+        int page = int.TryParse(req.QueryString["page"], out int p) ? p : 1; // default 1
         int size = int.TryParse(req.QueryString["size"], out int s) ? s : 5;
 
         var result1 = await actorService.Read(aid);
@@ -41,11 +41,11 @@ public class ActorMovieController
         if (result1.IsValid && result2.IsValid)
         {
             var actor = result1.Value!;
-            var pagedResult = result2.Value!;
-            var movies = pagedResult.Values;
-            int totalCount = pagedResult.TotalCount;
+            // Aquí actorMovies contiene ActorMovie, que tiene Movie y RoleName
+            var actorMovies = result2.Value!;
+            int totalCount = actorMovies.TotalCount;
 
-            string html = ActorMovieHtmlTemplates.ViewAllMoviesByActor(actor, movies, totalCount, page, size);
+            string html = ActorMovieHtmlTemplates.ViewAllMoviesByActor(actor, actorMovies.Values, totalCount, page, size);
             string content = HtmlTemplates.Base("SimpleMDB", "View All Movies By Actor Page", html, message);
 
             await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.OK, content);
@@ -53,13 +53,15 @@ public class ActorMovieController
         }
         else
         {
-            string error = result1.IsValid ? "" : result1.Error!.Message;
-            error += result1.IsValid ? "" : result2.Error!.Message;
+            string error = "";
+            if (!result1.IsValid) error += result1.Error?.Message ?? "";
+            if (!result2.IsValid) error += result2.Error?.Message ?? "";
 
             HttpUtils.AddOptions(options, "redirect", "message", error);
             await HttpUtils.Redirect(req, res, options, "/");
         }
     }
+
 
     // GET /movies/actors?mid=1&page=1&size=5
     public async Task ViewAllActorsByMovie(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
@@ -158,11 +160,10 @@ public class ActorMovieController
         }
     }
 
-
     // POST /actors/movies/add
     public async Task AddMoviesByActorPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
-        var formData = (NameValueCollection?)options["req.form"] ?? [];
+        var formData = (NameValueCollection?)options["req.form"] ?? new NameValueCollection();
         var aid = int.TryParse(formData["aid"], out int a) ? a : -1;
         var mid = int.TryParse(formData["mid"], out int m) ? m : -1;
         var rolename = formData["rolename"] ?? "Popo";
@@ -185,10 +186,10 @@ public class ActorMovieController
     // POST /movies/actors/add
     public async Task AddActorsByMoviePost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
-        var formData = (NameValueCollection?)options["req.form"] ?? [];
+        var formData = (NameValueCollection?)options["req.form"] ?? new NameValueCollection();
         var mid = int.TryParse(formData["mid"], out int m) ? m : -1;
         var aid = int.TryParse(formData["aid"], out int a) ? a : -1;
-        var rolename = formData["rolename"] ?? "NOT FOUND";
+        var rolename = formData["rolename"] ?? "Popo";
 
         var result = await actorMovieService.Create(aid, mid, rolename);
 
@@ -205,16 +206,17 @@ public class ActorMovieController
         }
     }
 
-    // POST /actors/movies/remove?amid=1&amid=1
+    // POST /actors/movies/remove
     public async Task RemoveMoviesByActorPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
-        int amid = int.TryParse(req.QueryString["amid"], out int a) ? a : -1;
+        var formData = (NameValueCollection?)options["req.form"] ?? new NameValueCollection();
+        int amid = int.TryParse(formData["amid"], out int a) ? a : -1;
 
         Result<ActorMovie> result = await actorMovieService.Delete(amid);
 
         if (result.IsValid)
         {
-            HttpUtils.AddOptions(options, "redirect", "message", "ActorMovie remove succesfully!");
+            HttpUtils.AddOptions(options, "redirect", "message", "ActorMovie removed successfully!");
             await HttpUtils.Redirect(req, res, options, $"/actors/movies?aid={result.Value!.ActorId}");
         }
         else
@@ -224,16 +226,17 @@ public class ActorMovieController
         }
     }
 
-    // POST /movies/actors/remove?amid=1&amid=1
+    // POST /movies/actors/remove
     public async Task RemoveActorsByMoviePost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
-        int amid = int.TryParse(req.QueryString["amid"], out int a) ? a : -1;
+        var formData = (NameValueCollection?)options["req.form"] ?? new NameValueCollection();
+        int amid = int.TryParse(formData["amid"], out int a) ? a : -1;
 
         Result<ActorMovie> result = await actorMovieService.Delete(amid);
 
         if (result.IsValid)
         {
-            HttpUtils.AddOptions(options, "redirect", "message", "ActorMovie remove succesfully!");
+            HttpUtils.AddOptions(options, "redirect", "message", "ActorMovie removed successfully!");
             await HttpUtils.Redirect(req, res, options, $"/movies/actors?mid={result.Value!.MovieId}");
         }
         else

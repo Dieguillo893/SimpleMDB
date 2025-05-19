@@ -15,6 +15,7 @@ public class HttpUtils
 
         prop[key] = value;
     }
+
     public static void AddOptions(Hashtable options, string name, NameValueCollection entries)
     {
         var prop = (NameValueCollection?)options[name] ?? [];
@@ -22,6 +23,7 @@ public class HttpUtils
 
         prop.Add(entries);
     }
+
     public static async Task Respond(HttpListenerRequest req, HttpListenerResponse res, Hashtable options, int StatusCode, string body)
     {
         byte[] content = Encoding.UTF8.GetBytes(body);
@@ -38,14 +40,17 @@ public class HttpUtils
         var redirectProps = (NameValueCollection?)options["redirect"] ?? [];
         var query = new List<string>();
         var append = location.Contains('?') ? '&' : '?';
+
         foreach (var key in redirectProps.AllKeys)
         {
-            query.Add($"{key}={HttpUtility.UrlEncode(key)}=(redirectProps[key])");
+            string value = redirectProps[key] ?? "";
+            query.Add($"{HttpUtility.UrlEncode(key)}={HttpUtility.UrlEncode(value)}");
         }
 
-        res.Redirect(location + append + string.Join('&', query));
-        res.Close();
+        string finalUrl = location + (query.Count > 0 ? append + string.Join("&", query) : "");
 
+        res.Redirect(finalUrl);
+        res.Close();
         await Task.CompletedTask;
     }
 
@@ -58,10 +63,8 @@ public class HttpUtils
             using var sr = new StreamReader(req.InputStream, Encoding.UTF8);
             string body = await sr.ReadToEndAsync();
             var formData = HttpUtility.ParseQueryString(body);
-
             options["req.form"] = formData;
         }
-
     }
 
     public static readonly NameValueCollection SUPPORTED_IANA_MIME_TYPES = new()
