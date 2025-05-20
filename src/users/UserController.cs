@@ -134,7 +134,7 @@ public class UserController
     // POST /users/edit?uid=1
     public async Task EditUserPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
-        int uid = int.TryParse(req.QueryString["uid"], out int u) ? u : 0;
+        int uid = int.TryParse(req.QueryString["uid"], out int u) ? u : -1;
 
         var formData = (NameValueCollection?)options["req.form"] ?? [];
 
@@ -146,6 +146,10 @@ public class UserController
 
         Result<User> result = await userService.Update(uid, newUser);
 
+        Console.WriteLine("#######");
+        Console.WriteLine(newUser);
+        Console.WriteLine(result);
+
         if (result.IsValid)
         {
             HttpUtils.AddOptions(options, "redirect", "message", "User edited succesfully!");
@@ -155,7 +159,7 @@ public class UserController
         {
 
             HttpUtils.AddOptions(options, "redirect", "message", result.Error!.Message);
-            await HttpUtils.Redirect(req, res, options, "/users/edit");
+            await HttpUtils.Redirect(req, res, options, $"/users/edit?uid={uid}");
         }
     }
 

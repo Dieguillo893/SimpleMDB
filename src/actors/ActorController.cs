@@ -6,34 +6,24 @@ namespace SimpleMDB;
 
 public class ActorController
 {
-    private ActorService actorService;
+    private readonly ActorService actorService;
 
     public ActorController(ActorService actorService)
     {
         this.actorService = actorService;
     }
 
-    // GET /actors?page=1&size=5
     public async Task ViewAllActorsGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
-        string message = req.QueryString["message"] ?? "";
-
-        int page = int.TryParse(req.QueryString["page"], out int p) ? p : 1;
-        int size = int.TryParse(req.QueryString["size"], out int s) ? s : 5;
-
-        Result<PagedResult<Actor>> result = await actorService.ReadAll(page, size);
+        int page = int.TryParse(req.QueryString["page"], out var p) ? p : 1;
+        int size = int.TryParse(req.QueryString["size"], out var s) ? s : 5;
+        var result = await actorService.ReadAll(page, size);
 
         if (result.IsValid)
         {
-            PagedResult<Actor> pagedResult = result.Value!;
-            List<Actor> actors = pagedResult.Values;
-            int actorCount = pagedResult.TotalCount;
-
-            string html = ActorHtmlTemplates.ViewAllActorsGet(actors, actorCount, page, size);
-            string content = HtmlTemplates.Base("SimpleMDB", "Actors View All Page", html, message);
-
-            await HttpUtils.Respond(req, res, options, (int)HttpStatusCode.OK, content);
-
+            var paged = result.Value!;
+            var html = ActorHtmlTemplates.ViewAllActorsGet(paged.Values, paged.TotalCount, page, size);
+            await HttpUtils.Respond(req, res, options, 200, HtmlTemplates.Base("SimpleMDB", "Actors", html, req.QueryString["message"] ?? ""));
         }
         else
         {
@@ -41,6 +31,7 @@ public class ActorController
             await HttpUtils.Redirect(req, res, options, "/");
         }
     }
+
 
     // GET /actors/add
     public async Task AddActorGet(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
@@ -136,7 +127,7 @@ public class ActorController
     // POST /actors/edit?aid=1
     public async Task EditActorPost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
-        int aid = int.TryParse(req.QueryString["aid"], out int u) ? u : 0;
+        int aid = int.TryParse(req.QueryString["aid"], out int u) ? u : -1;
 
         var formData = (NameValueCollection?)options["req.form"] ?? [];
 
@@ -159,7 +150,7 @@ public class ActorController
 
             HttpUtils.AddOptions(options, "redirect", "message", result.Error!.Message);
 
-            await HttpUtils.Redirect(req, res, options, "/actors/edit");
+            await HttpUtils.Redirect(req, res, options, $"/actors/edit?aid={aid}");
         }
     }
 

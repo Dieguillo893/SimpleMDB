@@ -2,8 +2,6 @@ namespace SimpleMDB;
 
 public class Movie
 {
-    private float rating;
-
     public int Id { get; set; }
     public string Title { get; set; }
     public int Year { get; set; }
@@ -17,14 +15,6 @@ public class Movie
         Year = year;
         Description = description;
         Rating = rating;
-    }
-
-    public Movie(string title = "", int year = 2025, string description = "", float rating = 0)
-    {
-        Title = title;
-        Year = year;
-        Description = description;
-        this.rating = rating;
     }
 
     public override string ToString()

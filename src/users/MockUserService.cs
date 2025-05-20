@@ -11,6 +11,7 @@ public class MockUserServices : UserService
     public MockUserServices(UserRepository userRepository)
     {
         this.userRepository = userRepository;
+        _ = Create(new User(0, "Admin", "masterofthegalaxy", "", Roles.ADMIN));
     }
 
     public async Task<Result<PagedResult<User>>> ReadAll(int page, int size)
@@ -104,9 +105,9 @@ public class MockUserServices : UserService
         {
             return new Result<User>(new Exception("Password cannot be empty"));
         }
-        //else if (newUser.Password.Length < 16)
+        else if (newUser.Password.Length < 16)
         {
-            //return new Result<User>(new Exception("Password cannoy have less than 16 characters."));
+            return new Result<User>(new Exception("Password cannoy have less than 16 characters."));
         }
 
         if (!Roles.IsValid(newUser.Role))

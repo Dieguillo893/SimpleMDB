@@ -25,15 +25,18 @@ public class App
         var UserController = new UserController(userService);
         var authController = new AuthController(userService);
 
-        var actorRepository = new MockActorRepository();
+        // var actorRepository = new MockActorRepository
+        var actorRepository = new MySqlActorRepository("Server=localhost;Database=simplemdb;Uid=root;Pwd=2611");
         var actorService = new MockActorServices(actorRepository);
         var ActorController = new ActorController(actorService);
 
-        var movieRepository = new MockMovieRepository();
+        //var movieRepository = new MockMovieRepository();
+        var movieRepository = new MySqlMovieRepository("Server=localhost;Database=simplemdb;Uid=root;Pwd=2611");
         var movieService = new MockMovieServices(movieRepository);
         var MovieController = new MovieController(movieService);
 
-        var actorMovieRepository = new MockActorMovieRepository(actorRepository, movieRepository);
+        //var actorMovieRepository = new MockActorMovieRepository(actorRepository, movieRepository);
+        var actorMovieRepository = new MySqlActorMovieRepository("Server=localhost;Database=simplemdb;Uid=root;Pwd=2611");
         var actorMovieService = new MockActorMovieService(actorMovieRepository);
         var actorMovieController = new ActorMovieController(actorMovieService, actorService, movieService);
 

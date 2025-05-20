@@ -136,7 +136,7 @@ public class MovieController
     // POST /movies/edit?mid=1
     public async Task EditMoviePost(HttpListenerRequest req, HttpListenerResponse res, Hashtable options)
     {
-        int mid = int.TryParse(req.QueryString["mid"], out int u) ? u : 0;
+        int mid = int.TryParse(req.QueryString["mid"], out int u) ? u : -1;
 
         var formData = (NameValueCollection?)options["req.form"] ?? [];
 
@@ -159,7 +159,7 @@ public class MovieController
 
             HttpUtils.AddOptions(options, "redirect", "message", result.Error!.Message);
 
-            await HttpUtils.Redirect(req, res, options, "/movies/edit");
+            await HttpUtils.Redirect(req, res, options, $"/movies/edit?mid={mid}");
         }
     }
 
